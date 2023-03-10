@@ -120,19 +120,19 @@ class _PlantScreenState extends State<PlantScreen> {
               Devices d = Devices.fromJson(
                   dados.docs[0].data() as Map<String, dynamic>,
                   dados.docs[0].id);
-              if (d.umidade < widget.plant.minAgua ||
-                  d.umidade > widget.plant.maxAgua) {
+              if (d.umidade < widget.plant.doubleMinAgua ||
+                  d.umidade > widget.plant.doubleMaxAgua) {
                 image = 'images/unhappy.gif';
                 color = const Color(0xffC72929);
                 _waterColor = const Color(0xffC72929);
                 statusFlag = 0;
-                if (d.umidade < widget.plant.minAgua) {
+                if (d.umidade < widget.plant.doubleMinAgua) {
                   badMood.add(3);
                 } else {
                   badMood.add(4);
                 }
-              } else if (d.umidade < widget.plant.minAgua + 20 ||
-                  d.umidade > widget.plant.maxAgua - 20) {
+              } else if (d.umidade < widget.plant.doubleMinAgua + 20 ||
+                  d.umidade > widget.plant.doubleMaxAgua - 20) {
                 _waterColor = const Color(0xffFDCC1C);
                 statusFlag++;
                 goodMood = [5];
@@ -142,14 +142,15 @@ class _PlantScreenState extends State<PlantScreen> {
                 goodMood = [6];
               }
 
-              if (d.luz < widget.plant.minLuz || d.luz > widget.plant.maxLuz) {
+              if (d.luz < widget.plant.doubleMinLuz ||
+                  d.luz > widget.plant.doubleMaxLuz) {
                 image = 'images/unhappy.gif';
                 color = const Color(0xffC72929);
                 _lightColor = const Color(0xffC72929);
                 statusFlag = 0;
                 badMood.add(7);
-              } else if (d.luz < widget.plant.minLuz + 20 ||
-                  d.luz > widget.plant.maxLuz - 20) {
+              } else if (d.luz < widget.plant.doubleMinLuz + 20 ||
+                  d.luz > widget.plant.doubleMaxLuz - 20) {
                 _lightColor = const Color(0xffFDCC1C);
                 statusFlag++;
                 goodMood = [8];
@@ -159,15 +160,16 @@ class _PlantScreenState extends State<PlantScreen> {
                 goodMood = [9];
               }
 
-              if (d.temperatura < widget.plant.minTemperatura ||
-                  d.temperatura > widget.plant.maxTemperatura) {
+              if (d.temperatura < widget.plant.doubleMinTemperatura ||
+                  d.temperatura > widget.plant.doubleMaxTemperatura) {
                 image = 'images/unhappy.gif';
                 color = const Color(0xffC72929);
                 _temperatureColor = const Color(0xffC72929);
                 statusFlag = 0;
                 badMood.add(10);
-              } else if (d.temperatura < widget.plant.minTemperatura + 2 ||
-                  d.temperatura > widget.plant.maxTemperatura - 2) {
+              } else if (d.temperatura <
+                      widget.plant.doubleMinTemperatura + 2 ||
+                  d.temperatura > widget.plant.doubleMaxTemperatura - 2) {
                 _temperatureColor = const Color(0xffFDCC1C);
                 statusFlag++;
                 goodMood = [11];

@@ -208,14 +208,15 @@ class _HomeState extends State<Home> {
       return plant.nome.toLowerCase() == d.especie;
     });
 
-    if (d.umidade < selected.minAgua || d.umidade > selected.maxAgua) {
+    if (d.umidade < selected.doubleMinAgua ||
+        d.umidade > selected.doubleMaxAgua) {
       image = 'images/unhappy.gif';
       color = const Color(0xffC72929);
-    } else if (d.luz < selected.minLuz || d.luz > selected.maxLuz) {
+    } else if (d.luz < selected.doubleMinLuz || d.luz > selected.doubleMaxLuz) {
       image = 'images/unhappy.gif';
       color = const Color(0xffC72929);
-    } else if (d.temperatura < selected.minTemperatura ||
-        d.temperatura > selected.maxTemperatura) {
+    } else if (d.temperatura < selected.doubleMinTemperatura ||
+        d.temperatura > selected.doubleMaxTemperatura) {
       image = 'images/unhappy.gif';
       color = const Color(0xffC72929);
     } else {
