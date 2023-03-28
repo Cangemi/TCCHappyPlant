@@ -8,7 +8,14 @@ import 'package:intl/intl.dart';
 import '../widget/CustomTextField.dart';
 
 class Register extends StatefulWidget {
-  const Register({super.key});
+  final CollectionReference plants;
+  final CollectionReference devices;
+  final CollectionReference users;
+  const Register(
+      {super.key,
+      required this.plants,
+      required this.devices,
+      required this.users});
 
   @override
   State<Register> createState() => _RegisterState();
@@ -27,10 +34,10 @@ class _RegisterState extends State<Register> {
 
   var form = GlobalKey<FormState>();
 
-  void createAccount(String nome, DateTime data, String email, String senha,
+  void createAccount(String nome, String data, String email, String senha,
       String confirmacaoSenha) {
     if (nome.isEmpty ||
-        data.day <= 0 ||
+        data.isEmpty ||
         email.isEmpty ||
         senha.isEmpty ||
         confirmacaoSenha.isEmpty) {
@@ -54,7 +61,12 @@ class _RegisterState extends State<Register> {
             'nascimento': data,
           });
           Navigator.push(
-              context, MaterialPageRoute(builder: (context) => const Login()));
+              context,
+              MaterialPageRoute(
+                  builder: (context) => Login(
+                      plants: widget.plants,
+                      devices: widget.devices,
+                      users: widget.users)));
         }).catchError((e) {
           switch (e.code) {
             case 'email-already-in-use':
@@ -179,9 +191,7 @@ class _RegisterState extends State<Register> {
                         RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30)))),
                 onPressed: () {
-                  DateTime dateTime = DateFormat('dd/MM/yyyy').parse(data.text);
-
-                  createAccount(nome.text, dateTime, email.text, senha.text,
+                  createAccount(nome.text, data.text, email.text, senha.text,
                       confirmacaoSenha.text);
                 },
                 child: const Text(
@@ -210,8 +220,13 @@ class _RegisterState extends State<Register> {
             ),
             TextButton(
                 onPressed: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => const Login()));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => Login(
+                              plants: widget.plants,
+                              devices: widget.devices,
+                              users: widget.users)));
                 },
                 child: const Text(
                   "Faça o Login",

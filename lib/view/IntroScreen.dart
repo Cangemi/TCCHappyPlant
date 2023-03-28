@@ -1,10 +1,18 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import 'Login.dart';
 import 'Register.dart';
 
 class IntroScreen extends StatelessWidget {
-  const IntroScreen({super.key});
+  final CollectionReference plants;
+  final CollectionReference devices;
+  final CollectionReference users;
+  const IntroScreen(
+      {super.key,
+      required this.plants,
+      required this.devices,
+      required this.users});
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +64,8 @@ class IntroScreen extends StatelessWidget {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const Register()));
+                          builder: (context) => Register(
+                              plants: plants, devices: devices, users: users)));
                 },
                 child: const Text(
                   "INICIAR",
@@ -84,8 +93,11 @@ class IntroScreen extends StatelessWidget {
             ),
             TextButton(
                 onPressed: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => const Login()));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => Login(
+                              plants: plants, devices: devices, users: users)));
                 },
                 child: const Text(
                   "Faça o Login",

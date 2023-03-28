@@ -32,9 +32,52 @@ class Status extends StatefulWidget {
   State<Status> createState() => _StatusState();
 }
 
-class _StatusState extends State<Status> {
+class _StatusState extends State<Status> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Tween<double> _tween;
+  double _value = 0;
+  late ColorTween _colorTween;
+  late Color _color;
+
+  void _startAnimation() {
+    _tween.begin = _value;
+    _tween.end = widget._value;
+    _colorTween.begin = _color; // adicione esta linha
+    _colorTween.end = widget._color;
+    _controller.reset();
+    _controller.forward();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+    _tween = Tween<double>(begin: _value, end: widget._value);
+    _color = widget._color; // adicione esta linha
+    _colorTween = ColorTween(begin: _color, end: widget._color);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    _controller.addListener(() {
+      setState(() {
+        _value = _tween.evaluate(_controller);
+        _color = _colorTween.evaluate(_controller)!;
+      });
+    });
+    setState(() {
+      //_value = widget._value;
+      _startAnimation();
+    });
     return Container(
       margin: const EdgeInsets.only(top: 8),
       child: Column(children: [
@@ -84,22 +127,29 @@ class _StatusState extends State<Status> {
         ),
         Stack(
           children: [
-            SliderTheme(
-              key: Key(DateTime.now().microsecondsSinceEpoch.toString()),
-              data: const SliderThemeData(
-                trackHeight: 16,
-                thumbShape: RoundSliderThumbShape(
-                    enabledThumbRadius: 9.1, elevation: 0, pressedElevation: 0),
-                overlayShape: RoundSliderOverlayShape(overlayRadius: 0),
-              ),
-              child: Slider(
-                value: widget._value,
-                min: 0,
-                max: 100,
-                onChanged: (value) {},
-                activeColor: widget._color,
-                inactiveColor: const Color(0xFFF4F4F4),
-              ),
+            AnimatedBuilder(
+              animation: _controller,
+              builder: (BuildContext context, child) {
+                return SliderTheme(
+                  key: Key(DateTime.now().microsecondsSinceEpoch.toString()),
+                  data: const SliderThemeData(
+                    trackHeight: 16,
+                    thumbShape: RoundSliderThumbShape(
+                        enabledThumbRadius: 9.1,
+                        elevation: 0,
+                        pressedElevation: 0),
+                    overlayShape: RoundSliderOverlayShape(overlayRadius: 0),
+                  ),
+                  child: Slider(
+                    value: _value,
+                    min: 0,
+                    max: 100,
+                    onChanged: (value) {},
+                    activeColor: _color,
+                    inactiveColor: const Color(0xFFF4F4F4),
+                  ),
+                );
+              },
             ),
             GestureDetector(
               onTap: () {

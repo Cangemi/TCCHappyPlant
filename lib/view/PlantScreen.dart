@@ -17,20 +17,28 @@ class PlantScreen extends StatefulWidget {
   final Query<Object?> device;
   final String userName;
   final String mac;
-  const PlantScreen(
-      {super.key,
-      required this.plant,
-      required this.device,
-      required this.userName,
-      required this.mac});
+  final CollectionReference plants;
+  final CollectionReference devices;
+  final CollectionReference users;
+  final String image;
+  const PlantScreen({
+    super.key,
+    required this.plant,
+    required this.device,
+    required this.userName,
+    required this.mac,
+    required this.plants,
+    required this.devices,
+    required this.users,
+    required this.image,
+  });
 
   @override
   State<PlantScreen> createState() => _PlantScreenState();
 }
 
 class _PlantScreenState extends State<PlantScreen> {
-  static CollectionReference devices =
-      FirebaseFirestore.instance.collection('devices');
+  DateTime now = DateTime.now();
 
   late List _list;
 
@@ -50,22 +58,19 @@ class _PlantScreenState extends State<PlantScreen> {
   int flag = 0;
   int statusFlag = 0;
 
-  String image = "";
+  late String _image;
 
   Color color = const Color(0xffC72929);
-
-  getPlantScript() {}
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    getPlantScript();
+    _image = widget.image;
   }
 
   @override
   Widget build(BuildContext context) {
-    getPlantScript();
     _device = widget.device.where("mac", isEqualTo: widget.mac);
     double _width = MediaQuery.of(context).size.width;
     return Scaffold(
@@ -98,8 +103,14 @@ class _PlantScreenState extends State<PlantScreen> {
                 onPressed: () async {
                   final tokenSave = await SharedPreferences.getInstance();
                   await tokenSave.setString("token", '');
-                  Navigator.pushReplacement(context,
-                      MaterialPageRoute(builder: (context) => const Login()));
+                  Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => Login(
+                                plants: widget.plants,
+                                devices: widget.devices,
+                                users: widget.users,
+                              )));
                 },
                 icon: const Icon(
                   Icons.logout,
@@ -120,72 +131,112 @@ class _PlantScreenState extends State<PlantScreen> {
               Devices d = Devices.fromJson(
                   dados.docs[0].data() as Map<String, dynamic>,
                   dados.docs[0].id);
-              if (d.umidade < widget.plant.doubleMinAgua ||
-                  d.umidade > widget.plant.doubleMaxAgua) {
-                image = 'images/unhappy.gif';
-                color = const Color(0xffC72929);
-                _waterColor = const Color(0xffC72929);
-                statusFlag = 0;
-                if (d.umidade < widget.plant.doubleMinAgua) {
-                  badMood.add(3);
+              if ((d.doubleUmidade < widget.plant.doubleMinAgua ||
+                      d.doubleUmidade > widget.plant.doubleMaxAgua) &&
+                  d.intAwaits == 0) {
+                if (now.hour < 18) {
+                  _image = 'images/unhappy.gif';
+                  color = const Color(0xffC72929);
+                  _waterColor = const Color(0xffC72929);
+                  statusFlag = 0;
+                  if (d.doubleUmidade < widget.plant.doubleMinAgua) {
+                    badMood.add(3);
+                  } else {
+                    badMood.add(4);
+                  }
                 } else {
-                  badMood.add(4);
+                  statusFlag++;
                 }
-              } else if (d.umidade < widget.plant.doubleMinAgua + 20 ||
-                  d.umidade > widget.plant.doubleMaxAgua - 20) {
+              } else if ((d.doubleUmidade < widget.plant.doubleMinAgua + 20 ||
+                      d.doubleUmidade > widget.plant.doubleMaxAgua - 20) &&
+                  d.intAwaits == 1) {
                 _waterColor = const Color(0xffFDCC1C);
                 statusFlag++;
-                goodMood = [5];
+                if (now.hour < 18) {
+                  goodMood = [5];
+                }
               } else {
                 _waterColor = const Color(0xff007F4F);
                 statusFlag++;
-                goodMood = [6];
+                if (now.hour < 18) {
+                  goodMood = [6];
+                }
               }
 
-              if (d.luz < widget.plant.doubleMinLuz ||
-                  d.luz > widget.plant.doubleMaxLuz) {
-                image = 'images/unhappy.gif';
-                color = const Color(0xffC72929);
-                _lightColor = const Color(0xffC72929);
-                statusFlag = 0;
-                badMood.add(7);
-              } else if (d.luz < widget.plant.doubleMinLuz + 20 ||
-                  d.luz > widget.plant.doubleMaxLuz - 20) {
-                _lightColor = const Color(0xffFDCC1C);
-                statusFlag++;
-                goodMood = [8];
-              } else {
-                _lightColor = const Color(0xff007F4F);
-                statusFlag++;
-                goodMood = [9];
-              }
-
-              if (d.temperatura < widget.plant.doubleMinTemperatura ||
-                  d.temperatura > widget.plant.doubleMaxTemperatura) {
-                image = 'images/unhappy.gif';
-                color = const Color(0xffC72929);
-                _temperatureColor = const Color(0xffC72929);
-                statusFlag = 0;
-                badMood.add(10);
-              } else if (d.temperatura <
+              if (d.doubleTemperatura < widget.plant.doubleMinTemperatura ||
+                  d.doubleTemperatura > widget.plant.doubleMaxTemperatura) {
+                if (now.hour < 18) {
+                  _image = 'images/unhappy.gif';
+                  color = const Color(0xffC72929);
+                  _temperatureColor = const Color(0xffC72929);
+                  statusFlag = 0;
+                  if (d.doubleTemperatura < widget.plant.doubleMinTemperatura) {
+                    badMood.add(7);
+                  } else {
+                    badMood.add(9);
+                  }
+                } else {
+                  statusFlag++;
+                }
+              } else if (d.doubleTemperatura <
                       widget.plant.doubleMinTemperatura + 2 ||
-                  d.temperatura > widget.plant.doubleMaxTemperatura - 2) {
+                  d.doubleTemperatura > widget.plant.doubleMaxTemperatura - 2) {
                 _temperatureColor = const Color(0xffFDCC1C);
                 statusFlag++;
-                goodMood = [11];
+                if (now.hour < 18) {
+                  goodMood = [8];
+                }
               } else {
                 _temperatureColor = const Color(0xff007F4F);
                 statusFlag++;
-                goodMood = [12];
+                if (now.hour < 18) {
+                  goodMood = [8];
+                }
               }
+
+              if (d.doubleLuz < widget.plant.doubleMinLuz ||
+                  d.doubleLuz > widget.plant.doubleMaxLuz) {
+                if (now.hour < 18) {
+                  _image = 'images/unhappy.gif';
+                  color = const Color(0xffC72929);
+                  _lightColor = const Color(0xffC72929);
+                  statusFlag = 0;
+                  if (d.doubleLuz < widget.plant.doubleMinLuz) {
+                    badMood.add(10);
+                  } else {
+                    badMood.add(12);
+                  }
+                } else {
+                  statusFlag++;
+                }
+              } else if (d.doubleLuz < widget.plant.doubleMinLuz + 20 ||
+                  d.doubleLuz > widget.plant.doubleMaxLuz - 20) {
+                _lightColor = const Color(0xffFDCC1C);
+                statusFlag++;
+                if (now.hour < 18) {
+                  goodMood = [11];
+                }
+              } else {
+                _lightColor = const Color(0xff007F4F);
+                statusFlag++;
+                if (now.hour < 18) {
+                  goodMood = [11];
+                }
+              }
+              print(statusFlag);
               if (statusFlag == 3) {
-                image = 'images/happy.gif';
+                _image = 'images/happy.gif';
                 color = const Color(0xff007F4F);
                 statusFlag = 0;
                 moodList = goodMood;
-                moodList.add(0);
+                if (now.hour < 18) {
+                  moodList.add(0);
+                } else {
+                  moodList.add(1);
+                }
               } else {
                 moodList = badMood;
+                statusFlag = 0;
               }
               return Container(
                 width: double.infinity,
@@ -238,14 +289,14 @@ class _PlantScreenState extends State<PlantScreen> {
                                             }
                                           },
                                           child: Image(
-                                            image: AssetImage(image),
+                                            image: AssetImage(_image),
                                             fit: BoxFit.cover,
                                           ),
                                         ),
                                       ),
                                       Container(
                                         margin:
-                                            const EdgeInsets.only(right: 90),
+                                            const EdgeInsets.only(right: 70),
                                         width: 54,
                                         height: 54,
                                         decoration: BoxDecoration(
@@ -291,7 +342,7 @@ class _PlantScreenState extends State<PlantScreen> {
                             fontWeight: FontWeight.w700),
                       ),
                       Status(
-                        value: d.umidade.toDouble(),
+                        value: d.doubleUmidade,
                         color: _waterColor,
                         text1: "Seco",
                         text2: "Úmido",
@@ -314,7 +365,7 @@ class _PlantScreenState extends State<PlantScreen> {
                         },
                       ),
                       Status(
-                        value: d.temperatura.toDouble(),
+                        value: d.doubleTemperatura,
                         color: _temperatureColor,
                         text1: "Frio",
                         text2: "Normal",
@@ -337,7 +388,7 @@ class _PlantScreenState extends State<PlantScreen> {
                         },
                       ),
                       Status(
-                        value: d.luz.toDouble(),
+                        value: d.doubleLuz,
                         color: _lightColor,
                         text1: "Pouca luz",
                         text2: "Normal",
@@ -377,7 +428,7 @@ class _PlantScreenState extends State<PlantScreen> {
                               value: d.irrigacao,
                               onChanged: (bool newValue) {
                                 setState(() {
-                                  devices
+                                  widget.devices
                                       .doc(d.id)
                                       .update({'irrigacao': newValue});
                                 });

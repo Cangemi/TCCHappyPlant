@@ -7,11 +7,16 @@ class Devices {
   String especie;
   String local;
   String mac;
-  int umidade;
-  int temperatura;
-  int luz;
-  int tempoSemIrrigacao;
-  int awaits;
+  String umidade;
+  late double doubleUmidade;
+  String temperatura;
+  late double doubleTemperatura;
+  String luz;
+  late double doubleLuz;
+  String tempoSemIrrigacao;
+  late double doubleTempoSemIrrigacao;
+  String awaits;
+  late int intAwaits;
   bool irrigacao;
 
   Devices(
@@ -26,21 +31,27 @@ class Devices {
       required this.luz,
       required this.tempoSemIrrigacao,
       required this.irrigacao,
-      required this.awaits});
+      required this.awaits}) {
+    doubleTempoSemIrrigacao = double.tryParse(tempoSemIrrigacao) ?? 0.0;
+    doubleUmidade = double.tryParse(umidade) ?? 0.0;
+    doubleTemperatura = double.tryParse(temperatura) ?? 0.0;
+    doubleLuz = double.tryParse(luz) ?? 0.0;
+    intAwaits = int.tryParse(awaits) ?? 0;
+  }
 
   factory Devices.fromJson(Map<String, dynamic> map, String id) {
     return Devices(
         id: id,
         nome: map['nome'],
-        tempoSemIrrigacao: map['tempoSemIrrigacao'],
-        especie: map['especie'],
-        local: map['local'],
-        luz: map['luz'],
-        mac: map['mac'],
-        temperatura: map['temperatura'],
-        uid: map['uid'],
-        umidade: map['umidade'],
-        irrigacao: map['irrigacao'],
-        awaits: map['awaits']);
+        tempoSemIrrigacao: map['tempoSemIrrigacao'] as String,
+        especie: map['especie'] as String,
+        local: map['local'] as String,
+        luz: map['luz'] as String,
+        mac: map['mac'] as String,
+        temperatura: map['temperatura'] as String,
+        uid: map['uid'] as String,
+        umidade: map['umidade'] as String,
+        awaits: map['awaits'] as String,
+        irrigacao: map['irrigacao']);
   }
 }

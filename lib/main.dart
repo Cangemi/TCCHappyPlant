@@ -28,11 +28,12 @@ void main() async {
 
   runApp(MaterialApp(
     home: token == null || token == ''
-        ? const IntroScreen()
+        ? IntroScreen(plants: plants, devices: devices, users: users)
         : Home(
             plants: plants,
             devices: devices,
             users: users,
+            token: token,
           ),
   ));
 }

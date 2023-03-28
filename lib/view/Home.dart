@@ -14,11 +14,13 @@ class Home extends StatefulWidget {
   final CollectionReference plants;
   final CollectionReference devices;
   final CollectionReference users;
+  final String token;
   const Home(
       {super.key,
       required this.plants,
       required this.devices,
-      required this.users});
+      required this.users,
+      required this.token});
 
   @override
   State<Home> createState() => _HomeState();
@@ -26,41 +28,47 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   List<Plants> pList = [];
+  List<Plants> lista = [];
 
-  String _token = "";
+  DateTime now = DateTime.now();
+
   late Query<Object?> _device;
   late DocumentSnapshot _user;
-  late Users user;
+  Users user = Users(uid: "", nascimento: "", nome: "");
   getPlants() async {
     QuerySnapshot qS = await widget.plants.get();
     for (DocumentSnapshot p in qS.docs) {
       Plants plants = Plants.fromJson(p.data() as Map<String, dynamic>, p.id);
-      pList.add(plants);
+      if (!pList.contains(plants)) {
+        setState(() {
+          pList.add(plants);
+        });
+      }
+      print("ADD ${plants.nome}");
     }
-    _user = await widget.users.doc(_token).get();
-    user = Users.fromJson(_user.data() as Map<String, dynamic>, _user.id);
   }
 
-  saveValue() async {
-    String uid = FirebaseAuth.instance.currentUser!.uid.toString();
-    final tokenSave = await SharedPreferences.getInstance();
-    await tokenSave.setString("token", uid);
-    String? token = await tokenSave.getString("token");
+  getUser() async {
+    _user = await widget.users.doc(widget.token).get();
     setState(() {
-      _token = token!;
+      user = Users.fromJson(_user.data() as Map<String, dynamic>, _user.id);
     });
+    print("Passou AQUI ------------------------------------------------");
   }
 
   @override
   void initState() {
     super.initState();
-    saveValue();
+    getUser();
     getPlants();
   }
 
   @override
   Widget build(BuildContext context) {
-    _device = widget.devices.where("uid", isEqualTo: _token);
+    print(
+        "TOKEN ${widget.token} <------------------------------------------------------------------------------------");
+    print(pList);
+    _device = widget.devices.where("uid", isEqualTo: widget.token);
     var height = MediaQuery.of(context).size.height;
     return Scaffold(
       backgroundColor: const Color(0Xffffffff),
@@ -90,8 +98,14 @@ class _HomeState extends State<Home> {
                 onPressed: () async {
                   final tokenSave = await SharedPreferences.getInstance();
                   await tokenSave.setString("token", '');
-                  Navigator.pushReplacement(context,
-                      MaterialPageRoute(builder: (context) => const Login()));
+                  Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => Login(
+                                plants: widget.plants,
+                                devices: widget.devices,
+                                users: widget.users,
+                              )));
                 },
                 icon: const Icon(
                   Icons.logout,
@@ -104,7 +118,7 @@ class _HomeState extends State<Home> {
       body: StreamBuilder(
         stream: _device.snapshots(),
         builder: (context, AsyncSnapshot snapshot) {
-          if (snapshot.hasData) {
+          if (snapshot.hasData && pList.isNotEmpty) {
             final dados = snapshot.requireData;
             if (dados.size <= 0) {
               return const Center(
@@ -142,7 +156,6 @@ class _HomeState extends State<Home> {
               ),
             ));
           } else {
-            _device = widget.devices.where("uid", isEqualTo: _token);
             return const Center(
                 child: CircularProgressIndicator(color: Color(0xff255A46)));
           }
@@ -205,24 +218,31 @@ class _HomeState extends State<Home> {
     Color color = const Color(0xffC72929);
     Devices d = Devices.fromJson(item.data() as Map<String, dynamic>, item.id);
     Plants selected = pList.firstWhere((plant) {
-      return plant.nome.toLowerCase() == d.especie;
+      return plant.nome.toLowerCase() == d.especie.toLowerCase();
     });
 
-    if (d.umidade < selected.doubleMinAgua ||
-        d.umidade > selected.doubleMaxAgua) {
-      image = 'images/unhappy.gif';
-      color = const Color(0xffC72929);
-    } else if (d.luz < selected.doubleMinLuz || d.luz > selected.doubleMaxLuz) {
-      image = 'images/unhappy.gif';
-      color = const Color(0xffC72929);
-    } else if (d.temperatura < selected.doubleMinTemperatura ||
-        d.temperatura > selected.doubleMaxTemperatura) {
-      image = 'images/unhappy.gif';
-      color = const Color(0xffC72929);
+    if (now.hour < 18) {
+      if (d.doubleUmidade < selected.doubleMinAgua ||
+          d.doubleUmidade > selected.doubleMaxAgua) {
+        image = 'images/unhappy.gif';
+        color = const Color(0xffC72929);
+      } else if (d.doubleLuz < selected.doubleMinLuz ||
+          d.doubleLuz > selected.doubleMaxLuz) {
+        image = 'images/unhappy.gif';
+        color = const Color(0xffC72929);
+      } else if (d.doubleTemperatura < selected.doubleMinTemperatura ||
+          d.doubleTemperatura > selected.doubleMaxTemperatura) {
+        image = 'images/unhappy.gif';
+        color = const Color(0xffC72929);
+      } else {
+        image = 'images/happy.gif';
+        color = const Color(0xff007F4F);
+      }
     } else {
       image = 'images/happy.gif';
       color = const Color(0xff007F4F);
     }
+
     return Dismissible(
       key: Key(DateTime.now().microsecondsSinceEpoch.toString()),
       direction: DismissDirection.endToStart,
@@ -265,6 +285,10 @@ class _HomeState extends State<Home> {
                               device: _device,
                               userName: user.nome,
                               mac: d.mac,
+                              devices: widget.devices,
+                              plants: widget.plants,
+                              users: widget.users,
+                              image: image,
                             )));
               },
               child: Row(

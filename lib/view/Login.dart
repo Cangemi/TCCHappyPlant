@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../my_icons_icons.dart';
 import '../widget/CustomTextField.dart';
@@ -9,26 +10,42 @@ import 'Home.dart';
 import 'Register.dart';
 
 class Login extends StatefulWidget {
-  const Login({super.key});
+  final CollectionReference plants;
+  final CollectionReference devices;
+  final CollectionReference users;
+  const Login(
+      {super.key,
+      required this.plants,
+      required this.devices,
+      required this.users});
 
   @override
   State<Login> createState() => _LoginState();
 }
 
 class _LoginState extends State<Login> {
-  CollectionReference plants = FirebaseFirestore.instance.collection('plants');
-  CollectionReference devices =
-      FirebaseFirestore.instance.collection('devices');
-  CollectionReference users = FirebaseFirestore.instance.collection('users');
-
   TextEditingController email = TextEditingController();
   TextEditingController senha = TextEditingController();
   var form = GlobalKey<FormState>();
+  String token = "";
 
   Color colorAlertError = Color(0xffC72929);
   Color noError = Colors.transparent;
   String _alert = "Dados incorretos";
   bool _alertFlag = false;
+
+  getId() async {
+    final tokenSave = await SharedPreferences.getInstance();
+    setState(() {
+      token = tokenSave.getString("token")!;
+    });
+  }
+
+  saveValue() async {
+    String uid = FirebaseAuth.instance.currentUser!.uid.toString();
+    final tokenSave = await SharedPreferences.getInstance();
+    await tokenSave.setString("token", uid);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -131,13 +148,16 @@ class _LoginState extends State<Login> {
                           .signInWithEmailAndPassword(
                               email: email.text, password: senha.text)
                           .then((res) {
+                        saveValue();
+                        getId();
                         Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
                                 builder: (context) => Home(
-                                      plants: plants,
-                                      devices: devices,
-                                      users: users,
+                                      plants: widget.plants,
+                                      devices: widget.devices,
+                                      users: widget.users,
+                                      token: token,
                                     )));
                       }).catchError((e) {
                         switch (e.code) {
@@ -221,7 +241,10 @@ class _LoginState extends State<Login> {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const Register()));
+                          builder: (context) => Register(
+                              plants: widget.plants,
+                              devices: widget.devices,
+                              users: widget.users)));
                 },
                 child: const Text(
                   "Faça seu Cadastro",

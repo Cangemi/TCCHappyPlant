@@ -146,10 +146,10 @@ class _AddDevicesState extends State<AddDevices> {
                         'especie': _plant,
                         'mac': mac.text,
                         'tempoSemIrrigacao': selected.tempoSemIrrigacao,
-                        'temperatura': 0,
-                        'umidade': 0,
-                        'luz': 0,
-                        'awaits': 0,
+                        'temperatura': "0",
+                        'umidade': "0",
+                        'luz': "0",
+                        'awaits': "0",
                         'irrigacao': false
                       });
                       widget.onClose();
