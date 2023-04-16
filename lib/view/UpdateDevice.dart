@@ -147,11 +147,12 @@ class _UpdateDeviceState extends State<UpdateDevice> {
                           'mac': mac.text.isEmpty ? _mac : mac.text,
                           'tempoSemIrrigacao': selected.tempoSemIrrigacao,
                           'minAgua': selected.doubleMinAgua.toString(),
-                          'temperatura': "0",
-                          'umidade': "0",
-                          'luz': "0",
-                          'awaits': "0",
-                          'irrigacao': false,
+                          'temperatura':
+                              widget.device.doubleTemperatura.toString(),
+                          'umidade': widget.device.doubleUmidade.toString(),
+                          'luz': widget.device.doubleLuz.toString(),
+                          'awaits': widget.device.awaits.toString(),
+                          'irrigacao': widget.device.irrigacao,
                           'time': DateTime.now()
                         }).then((_) {
                           print('Documento atualizado com sucesso!');
