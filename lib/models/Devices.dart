@@ -18,6 +18,7 @@ class Devices {
   String awaits;
   late int intAwaits;
   bool irrigacao;
+  DateTime time;
 
   Devices(
       {this.id,
@@ -31,7 +32,8 @@ class Devices {
       required this.luz,
       required this.tempoSemIrrigacao,
       required this.irrigacao,
-      required this.awaits}) {
+      required this.awaits,
+      required this.time}) {
     doubleTempoSemIrrigacao = double.tryParse(tempoSemIrrigacao) ?? 0.0;
     doubleUmidade = double.tryParse(umidade) ?? 0.0;
     doubleTemperatura = double.tryParse(temperatura) ?? 0.0;
@@ -40,6 +42,8 @@ class Devices {
   }
 
   factory Devices.fromJson(Map<String, dynamic> map, String id) {
+    Timestamp timestamp = map['time'];
+    DateTime dateTime = timestamp.toDate();
     return Devices(
         id: id,
         nome: map['nome'],
@@ -52,6 +56,7 @@ class Devices {
         uid: map['uid'] as String,
         umidade: map['umidade'] as String,
         awaits: map['awaits'] as String,
-        irrigacao: map['irrigacao']);
+        irrigacao: map['irrigacao'],
+        time: dateTime);
   }
 }

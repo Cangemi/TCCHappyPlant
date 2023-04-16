@@ -1,14 +1,19 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:happy_plant/models/Users.dart';
 import 'package:happy_plant/view/AddDevices.dart';
 import 'package:happy_plant/view/PlantScreen.dart';
+import 'package:happy_plant/view/UpdateDevice.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/Devices.dart';
+import '../widget/PlantImage.dart';
 import '../models/Plants.dart';
 import 'Login.dart';
+import 'Profile.dart';
 
 class Home extends StatefulWidget {
   final CollectionReference plants;
@@ -44,7 +49,6 @@ class _HomeState extends State<Home> {
           pList.add(plants);
         });
       }
-      print("ADD ${plants.nome}");
     }
   }
 
@@ -53,7 +57,23 @@ class _HomeState extends State<Home> {
     setState(() {
       user = Users.fromJson(_user.data() as Map<String, dynamic>, _user.id);
     });
-    print("Passou AQUI ------------------------------------------------");
+  }
+
+  message(String text) {
+    final snackBar = SnackBar(
+      backgroundColor: Colors.white,
+      shape: const Border(top: BorderSide(color: Color(0xff00804F), width: 3)),
+      content: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+            fontFamily: 'Quicksand',
+            fontSize: 16,
+            color: Color(0xff081510),
+            fontWeight: FontWeight.w700),
+      ),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   @override
@@ -65,9 +85,6 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    print(
-        "TOKEN ${widget.token} <------------------------------------------------------------------------------------");
-    print(pList);
     _device = widget.devices.where("uid", isEqualTo: widget.token);
     var height = MediaQuery.of(context).size.height;
     return Scaffold(
@@ -85,7 +102,16 @@ class _HomeState extends State<Home> {
               fontWeight: FontWeight.w700),
         ),
         leading: IconButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => Profile(
+                            plants: widget.plants,
+                            devices: widget.devices,
+                            users: widget.users,
+                          )));
+            },
             icon: const Icon(
               Icons.person_outline_outlined,
               color: Color(0xff081510),
@@ -214,35 +240,12 @@ class _HomeState extends State<Home> {
   }
 
   Dismissible cards(item) {
-    String image = "";
+    var height = MediaQuery.of(context).size.height;
     Color color = const Color(0xffC72929);
     Devices d = Devices.fromJson(item.data() as Map<String, dynamic>, item.id);
     Plants selected = pList.firstWhere((plant) {
       return plant.nome.toLowerCase() == d.especie.toLowerCase();
     });
-
-    if (now.hour < 18) {
-      if (d.doubleUmidade < selected.doubleMinAgua ||
-          d.doubleUmidade > selected.doubleMaxAgua) {
-        image = 'images/unhappy.gif';
-        color = const Color(0xffC72929);
-      } else if (d.doubleLuz < selected.doubleMinLuz ||
-          d.doubleLuz > selected.doubleMaxLuz) {
-        image = 'images/unhappy.gif';
-        color = const Color(0xffC72929);
-      } else if (d.doubleTemperatura < selected.doubleMinTemperatura ||
-          d.doubleTemperatura > selected.doubleMaxTemperatura) {
-        image = 'images/unhappy.gif';
-        color = const Color(0xffC72929);
-      } else {
-        image = 'images/happy.gif';
-        color = const Color(0xff007F4F);
-      }
-    } else {
-      image = 'images/happy.gif';
-      color = const Color(0xff007F4F);
-    }
-
     return Dismissible(
       key: Key(DateTime.now().microsecondsSinceEpoch.toString()),
       direction: DismissDirection.endToStart,
@@ -276,6 +279,36 @@ class _HomeState extends State<Home> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             GestureDetector(
+              onLongPress: () {
+                showDialog(
+                    context: context,
+                    builder: (context) {
+                      return Material(
+                        color: Colors.transparent,
+                        child: Container(
+                          margin: EdgeInsets.only(
+                              top: height * 0.2,
+                              right: 24,
+                              left: 24,
+                              bottom: height * 0.2),
+                          constraints: const BoxConstraints.expand(),
+                          decoration: const BoxDecoration(
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(30),
+                            ),
+                          ),
+                          child: UpdateDevice(
+                            device: d,
+                            list: pList,
+                            onClose: () {
+                              message("Dispositivo atualizado");
+                              Navigator.pop(context);
+                            },
+                          ),
+                        ),
+                      );
+                    });
+              },
               onTap: () {
                 Navigator.push(
                     context,
@@ -288,7 +321,6 @@ class _HomeState extends State<Home> {
                               devices: widget.devices,
                               plants: widget.plants,
                               users: widget.users,
-                              image: image,
                             )));
               },
               child: Row(
@@ -296,29 +328,13 @@ class _HomeState extends State<Home> {
                   SizedBox(
                       height: 60,
                       width: 60,
-                      child: Stack(
-                        alignment: AlignmentDirectional.topEnd,
-                        children: [
-                          Image(
-                            image: AssetImage(image),
-                            fit: BoxFit.cover,
-                          ),
-                          Container(
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              color: color,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Center(
-                              child: Icon(
-                                Icons.check_rounded,
-                                color: Colors.white,
-                                size: 20 * 0.6,
-                              ),
-                            ),
-                          )
-                        ],
+                      child: PlantImage(
+                        device: _device.where("mac", isEqualTo: d.mac),
+                        plant: selected,
+                        width: 20,
+                        height: 20,
+                        size: 20,
+                        margin: 5,
                       )),
                   Container(
                     margin: const EdgeInsets.only(left: 11),

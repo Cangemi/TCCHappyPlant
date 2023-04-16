@@ -42,6 +42,10 @@ class _CustomTextFieldState extends State<CustomTextField> {
         mask: "(##) #####-####", filter: {"#": RegExp(r'[0-9]')});
     final maskDate = MaskTextInputFormatter(
         mask: " ##/##/####", filter: {"#": RegExp(r'[0-9]')});
+
+    final maskMAC = MaskTextInputFormatter(
+        mask: '##:##:##:##:##:##', filter: {"#": RegExp(r'[0-9A-Fa-f]')});
+
     return Column(
       children: [
         SizedBox(
@@ -78,7 +82,9 @@ class _CustomTextFieldState extends State<CustomTextField> {
                     ? [maskPhone]
                     : widget.mask == 2
                         ? [maskDate]
-                        : [],
+                        : widget.mask == 3
+                            ? [maskMAC]
+                            : [],
                 keyboardType: widget.textInputType ?? TextInputType.text,
                 obscureText: password,
                 style: const TextStyle(

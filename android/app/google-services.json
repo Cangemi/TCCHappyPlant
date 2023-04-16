@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "268597474969",
+    "firebase_url": "https://happy-plant-542fd-default-rtdb.firebaseio.com",
     "project_id": "happy-plant-542fd",
     "storage_bucket": "happy-plant-542fd.appspot.com"
   },
@@ -14,7 +15,15 @@
       },
       "oauth_client": [
         {
-          "client_id": "268597474969-koijph3nobololags00s5mui7bn59ps2.apps.googleusercontent.com",
+          "client_id": "268597474969-m8c38l91a4osulgmb3ocu4hgjfit0d0t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.happy_plant",
+            "certificate_hash": "6db3160a69f9ef9994906655e541894f4f2234b4"
+          }
+        },
+        {
+          "client_id": "268597474969-aaoo7nqlgluijvsi9l8fak5ha6sm53um.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
@@ -27,7 +36,7 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "268597474969-koijph3nobololags00s5mui7bn59ps2.apps.googleusercontent.com",
+              "client_id": "268597474969-aaoo7nqlgluijvsi9l8fak5ha6sm53um.apps.googleusercontent.com",
               "client_type": 3
             },
             {

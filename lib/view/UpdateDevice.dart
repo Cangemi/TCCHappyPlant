@@ -10,18 +10,28 @@ import '../models/Plants.dart';
 import '../widget/CustomTextField.dart';
 import '../widget/textShaker.dart';
 
-class AddDevices extends StatefulWidget {
+class UpdateDevice extends StatefulWidget {
+  final Devices device;
   final Function onClose;
   final List<Plants> list;
-  const AddDevices({super.key, required this.onClose, required this.list});
+  const UpdateDevice(
+      {super.key,
+      required this.onClose,
+      required this.list,
+      required this.device});
   @override
-  State<AddDevices> createState() => _AddDevicesState();
+  State<UpdateDevice> createState() => _UpdateDeviceState();
 }
 
-class _AddDevicesState extends State<AddDevices> {
+class _UpdateDeviceState extends State<UpdateDevice> {
   TextEditingController nome = TextEditingController();
   TextEditingController local = TextEditingController();
   TextEditingController mac = TextEditingController();
+
+  String _nome = "";
+  String _local = "";
+  String _mac = "";
+  String _otherPlant = "";
 
   String _plant = '';
   late List<String> _list;
@@ -43,6 +53,10 @@ class _AddDevicesState extends State<AddDevices> {
     super.initState();
     _list = widget.list.map((plants) => plants.nome).toList();
     getToken();
+    _nome = widget.device.nome;
+    _local = widget.device.local;
+    _mac = widget.device.mac;
+    _otherPlant = widget.device.especie;
   }
 
   @override
@@ -63,7 +77,7 @@ class _AddDevicesState extends State<AddDevices> {
             children: [
               TextFieldSuggestions(
                   list: _list,
-                  labelText: "Tipo da planta",
+                  labelText: _otherPlant,
                   textSuggetionsColor: const Color(0xff081510),
                   suggetionsBackgroundColor: Colors.white,
                   outlineInputBorderColor: const Color(0xff081510),
@@ -74,21 +88,21 @@ class _AddDevicesState extends State<AddDevices> {
                 textEditingController: nome,
                 label: "Nome da sua planta",
                 controller: (TextEditingController value) => nome = value,
-                hint: "Nome da planta",
+                hint: _nome,
                 password: false,
               ),
               CustomTextField(
                 textEditingController: local,
                 label: "Local da sua planta",
                 controller: (TextEditingController value) => local = value,
-                hint: "Ex. Sala",
+                hint: _local,
                 password: false,
               ),
               CustomTextField(
                 textEditingController: mac,
                 label: "Numero MAC",
                 controller: (TextEditingController value) => mac = value,
-                hint: "MAC",
+                hint: _mac,
                 password: false,
                 mask: 3,
               ),
@@ -114,38 +128,40 @@ class _AddDevicesState extends State<AddDevices> {
                           RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(30)))),
                   onPressed: () {
-                    if (nome.text.isEmpty ||
-                        local.text.isEmpty ||
-                        mac.text.isEmpty ||
-                        _plant.isEmpty) {
-                      setState(() {
-                        _alertFlag = true;
+                    Plants selected = widget.list.firstWhere((plant) {
+                      return plant.nome.toLowerCase() ==
+                          (_plant.isEmpty ? _otherPlant : _plant);
+                    });
+                    String? token = tokenSave.getString("token");
+                    FirebaseFirestore.instance
+                        .collection('devices')
+                        .where('uid', isEqualTo: token)
+                        .get()
+                        .then((querySnapshot) {
+                      querySnapshot.docs.forEach((doc) {
+                        doc.reference.update({
+                          'uid': token,
+                          'nome': nome.text.isEmpty ? _nome : nome.text,
+                          'local': local.text.isEmpty ? _local : local.text,
+                          'especie': _plant.isEmpty ? _otherPlant : _plant,
+                          'mac': mac.text.isEmpty ? _mac : mac.text,
+                          'tempoSemIrrigacao': selected.tempoSemIrrigacao,
+                          'minAgua': selected.doubleMinAgua.toString(),
+                          'temperatura': "0",
+                          'umidade': "0",
+                          'luz': "0",
+                          'awaits': "0",
+                          'irrigacao': false,
+                          'time': DateTime.now()
+                        }).then((_) {
+                          print('Documento atualizado com sucesso!');
+                        }).catchError((error) {
+                          print('Erro ao atualizar o documento: $error');
+                        });
                       });
-                    } else {
-                      Plants selected = widget.list.firstWhere((plant) {
-                        return plant.nome.toLowerCase() == _plant;
-                      });
-                      String? token = tokenSave.getString("token");
-                      FirebaseFirestore.instance
-                          .collection('devices')
-                          .doc()
-                          .set({
-                        'uid': token,
-                        'nome': nome.text,
-                        'local': local.text,
-                        'especie': _plant,
-                        'mac': mac.text,
-                        'tempoSemIrrigacao': selected.tempoSemIrrigacao,
-                        'minAgua': selected.doubleMinAgua.toString(),
-                        'temperatura': "0",
-                        'umidade': "0",
-                        'luz': "0",
-                        'awaits': "0",
-                        'irrigacao': false,
-                        'time': DateTime.now()
-                      });
-                      widget.onClose();
-                    }
+                    });
+
+                    widget.onClose();
                   },
                   child: const Text(
                     "Adicionar planta",

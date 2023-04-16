@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/Devices.dart';
+import '../widget/PlantImage.dart';
 import '../models/Plants.dart';
 import '../models/Users.dart';
 import '../widget/SpeechBalloon.dart';
@@ -20,7 +21,6 @@ class PlantScreen extends StatefulWidget {
   final CollectionReference plants;
   final CollectionReference devices;
   final CollectionReference users;
-  final String image;
   const PlantScreen({
     super.key,
     required this.plant,
@@ -30,7 +30,6 @@ class PlantScreen extends StatefulWidget {
     required this.plants,
     required this.devices,
     required this.users,
-    required this.image,
   });
 
   @override
@@ -59,6 +58,8 @@ class _PlantScreenState extends State<PlantScreen> {
   int statusFlag = 0;
 
   late String _image;
+  late IconData _icon;
+  bool wifi = true;
 
   Color color = const Color(0xffC72929);
 
@@ -66,7 +67,6 @@ class _PlantScreenState extends State<PlantScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    _image = widget.image;
   }
 
   @override
@@ -131,112 +131,110 @@ class _PlantScreenState extends State<PlantScreen> {
               Devices d = Devices.fromJson(
                   dados.docs[0].data() as Map<String, dynamic>,
                   dados.docs[0].id);
-              if ((d.doubleUmidade < widget.plant.doubleMinAgua ||
-                      d.doubleUmidade > widget.plant.doubleMaxAgua) &&
-                  d.intAwaits == 0) {
-                if (now.hour < 18) {
-                  _image = 'images/unhappy.gif';
-                  color = const Color(0xffC72929);
-                  _waterColor = const Color(0xffC72929);
-                  statusFlag = 0;
-                  if (d.doubleUmidade < widget.plant.doubleMinAgua) {
-                    badMood.add(3);
+              if ((now.difference(d.time)).inSeconds < 40) {
+                if ((d.doubleUmidade < widget.plant.doubleMinAgua ||
+                        d.doubleUmidade > widget.plant.doubleMaxAgua) &&
+                    d.intAwaits == 0) {
+                  if (now.hour < 18) {
+                    _waterColor = const Color(0xffC72929);
+                    statusFlag = 0;
+                    if (d.doubleUmidade < widget.plant.doubleMinAgua) {
+                      badMood.add(3);
+                    } else {
+                      badMood.add(4);
+                    }
                   } else {
-                    badMood.add(4);
+                    statusFlag++;
+                  }
+                } else if ((d.doubleUmidade < widget.plant.doubleMinAgua + 20 ||
+                        d.doubleUmidade > widget.plant.doubleMaxAgua - 20) &&
+                    d.intAwaits == 1) {
+                  _waterColor = const Color(0xffFDCC1C);
+                  statusFlag++;
+                  if (now.hour < 18) {
+                    goodMood = [5];
                   }
                 } else {
+                  _waterColor = const Color(0xff007F4F);
                   statusFlag++;
+                  if (now.hour < 18) {
+                    goodMood = [6];
+                  }
                 }
-              } else if ((d.doubleUmidade < widget.plant.doubleMinAgua + 20 ||
-                      d.doubleUmidade > widget.plant.doubleMaxAgua - 20) &&
-                  d.intAwaits == 1) {
-                _waterColor = const Color(0xffFDCC1C);
-                statusFlag++;
-                if (now.hour < 18) {
-                  goodMood = [5];
-                }
-              } else {
-                _waterColor = const Color(0xff007F4F);
-                statusFlag++;
-                if (now.hour < 18) {
-                  goodMood = [6];
-                }
-              }
 
-              if (d.doubleTemperatura < widget.plant.doubleMinTemperatura ||
-                  d.doubleTemperatura > widget.plant.doubleMaxTemperatura) {
-                if (now.hour < 18) {
-                  _image = 'images/unhappy.gif';
-                  color = const Color(0xffC72929);
-                  _temperatureColor = const Color(0xffC72929);
-                  statusFlag = 0;
-                  if (d.doubleTemperatura < widget.plant.doubleMinTemperatura) {
-                    badMood.add(7);
+                if (d.doubleTemperatura < widget.plant.doubleMinTemperatura ||
+                    d.doubleTemperatura > widget.plant.doubleMaxTemperatura) {
+                  if (now.hour < 18) {
+                    _temperatureColor = const Color(0xffC72929);
+                    statusFlag = 0;
+                    if (d.doubleTemperatura <
+                        widget.plant.doubleMinTemperatura) {
+                      badMood.add(7);
+                    } else {
+                      badMood.add(9);
+                    }
                   } else {
-                    badMood.add(9);
+                    statusFlag++;
+                  }
+                } else if (d.doubleTemperatura <
+                        widget.plant.doubleMinTemperatura + 2 ||
+                    d.doubleTemperatura >
+                        widget.plant.doubleMaxTemperatura - 2) {
+                  _temperatureColor = const Color(0xffFDCC1C);
+                  statusFlag++;
+                  if (now.hour < 18) {
+                    goodMood = [8];
                   }
                 } else {
+                  _temperatureColor = const Color(0xff007F4F);
                   statusFlag++;
+                  if (now.hour < 18) {
+                    goodMood = [8];
+                  }
                 }
-              } else if (d.doubleTemperatura <
-                      widget.plant.doubleMinTemperatura + 2 ||
-                  d.doubleTemperatura > widget.plant.doubleMaxTemperatura - 2) {
-                _temperatureColor = const Color(0xffFDCC1C);
-                statusFlag++;
-                if (now.hour < 18) {
-                  goodMood = [8];
-                }
-              } else {
-                _temperatureColor = const Color(0xff007F4F);
-                statusFlag++;
-                if (now.hour < 18) {
-                  goodMood = [8];
-                }
-              }
 
-              if (d.doubleLuz < widget.plant.doubleMinLuz ||
-                  d.doubleLuz > widget.plant.doubleMaxLuz) {
-                if (now.hour < 18) {
-                  _image = 'images/unhappy.gif';
-                  color = const Color(0xffC72929);
-                  _lightColor = const Color(0xffC72929);
-                  statusFlag = 0;
-                  if (d.doubleLuz < widget.plant.doubleMinLuz) {
-                    badMood.add(10);
+                if (d.doubleLuz < widget.plant.doubleMinLuz ||
+                    d.doubleLuz > widget.plant.doubleMaxLuz) {
+                  if (now.hour < 18) {
+                    _lightColor = const Color(0xffC72929);
+                    statusFlag = 0;
+                    if (d.doubleLuz < widget.plant.doubleMinLuz) {
+                      badMood.add(10);
+                    } else {
+                      badMood.add(12);
+                    }
                   } else {
-                    badMood.add(12);
+                    statusFlag++;
+                  }
+                } else if (d.doubleLuz < widget.plant.doubleMinLuz + 20 ||
+                    d.doubleLuz > widget.plant.doubleMaxLuz - 20) {
+                  _lightColor = const Color(0xffFDCC1C);
+                  statusFlag++;
+                  if (now.hour < 18) {
+                    goodMood = [11];
                   }
                 } else {
+                  _lightColor = const Color(0xff007F4F);
                   statusFlag++;
+                  if (now.hour < 18) {
+                    goodMood = [11];
+                  }
                 }
-              } else if (d.doubleLuz < widget.plant.doubleMinLuz + 20 ||
-                  d.doubleLuz > widget.plant.doubleMaxLuz - 20) {
-                _lightColor = const Color(0xffFDCC1C);
-                statusFlag++;
-                if (now.hour < 18) {
-                  goodMood = [11];
-                }
-              } else {
-                _lightColor = const Color(0xff007F4F);
-                statusFlag++;
-                if (now.hour < 18) {
-                  goodMood = [11];
-                }
-              }
-              print(statusFlag);
-              if (statusFlag == 3) {
-                _image = 'images/happy.gif';
-                color = const Color(0xff007F4F);
-                statusFlag = 0;
-                moodList = goodMood;
-                if (now.hour < 18) {
-                  moodList.add(0);
+
+                if (statusFlag == 3) {
+                  statusFlag = 0;
+                  moodList = goodMood;
+                  if (now.hour < 18) {
+                    moodList.add(0);
+                  } else {
+                    moodList.add(1);
+                  }
                 } else {
-                  moodList.add(1);
+                  moodList = badMood;
+                  statusFlag = 0;
                 }
               } else {
-                moodList = badMood;
-                statusFlag = 0;
+                //Sem wifi
               }
               return Container(
                 width: double.infinity,
@@ -255,83 +253,67 @@ class _PlantScreenState extends State<PlantScreen> {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      Stack(
-                        children: [
-                          Column(
-                            children: [
-                              Container(
-                                  margin: const EdgeInsets.only(top: 20),
-                                  height: 252,
-                                  width: double.infinity,
-                                  child: Stack(
-                                    alignment: AlignmentDirectional.topEnd,
-                                    children: [
-                                      Center(
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            if (flag == 0) {
-                                              if (moodList.contains(2)) {
-                                                moodList.remove(2);
-                                              }
-                                              int i = random
-                                                  .nextInt(moodList.length);
-                                              setState(() {
-                                                _list = widget.plant
-                                                        .script[moodList[i]][
-                                                    random
-                                                        .nextInt(widget
-                                                            .plant
-                                                            .script[moodList[i]]
-                                                            .length)
-                                                        .toString()];
-                                                flag = 1;
-                                              });
+                      Hero(
+                        tag: 'plant-tag',
+                        child: Stack(
+                          children: [
+                            Column(
+                              children: [
+                                Container(
+                                    margin: const EdgeInsets.only(top: 20),
+                                    height: 252,
+                                    width: double.infinity,
+                                    child: GestureDetector(
+                                        onTap: () {
+                                          if (flag == 0) {
+                                            if (moodList.contains(2)) {
+                                              moodList.remove(2);
                                             }
-                                          },
-                                          child: Image(
-                                            image: AssetImage(_image),
-                                            fit: BoxFit.cover,
-                                          ),
-                                        ),
-                                      ),
-                                      Container(
-                                        margin:
-                                            const EdgeInsets.only(right: 70),
-                                        width: 54,
-                                        height: 54,
-                                        decoration: BoxDecoration(
-                                          color: color,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: const Icon(
-                                          Icons.check_rounded,
-                                          color: Colors.white,
-                                          size: 54 * 0.6,
-                                        ),
-                                      ),
-                                    ],
-                                  )),
-                              const SizedBox(
-                                height: 50,
-                              )
-                            ],
-                          ),
-                          flag == 0
-                              ? Container()
-                              : Positioned(
-                                  width: _width * 0.87,
-                                  top: 225,
-                                  child: Center(
-                                      child: SpeechBalloon(
-                                    name: widget.userName,
-                                    text: _list,
-                                    callBack: () {
-                                      setState(() {
-                                        flag = 0;
-                                      });
-                                    },
-                                  )))
-                        ],
+                                            int i =
+                                                random.nextInt(moodList.length);
+                                            setState(() {
+                                              _list = widget
+                                                      .plant.script[moodList[i]]
+                                                  [random
+                                                      .nextInt(widget
+                                                          .plant
+                                                          .script[moodList[i]]
+                                                          .length)
+                                                      .toString()];
+                                              flag = 1;
+                                            });
+                                          }
+                                        },
+                                        child: PlantImage(
+                                          device: _device,
+                                          plant: widget.plant,
+                                          width: 54,
+                                          height: 54,
+                                          size: 54,
+                                          margin: 70,
+                                        ))),
+                                const SizedBox(
+                                  height: 50,
+                                )
+                              ],
+                            ),
+                            flag == 0
+                                ? Container()
+                                : Positioned(
+                                    width: _width * 0.87,
+                                    top: 225,
+                                    child: Center(
+                                        child: SpeechBalloon(
+                                      name: widget.userName,
+                                      text: _list,
+                                      callBack: () {
+                                        setState(() {
+                                          flag = 0;
+                                        });
+                                      },
+                                    )))
+                          ],
+                        ),
                       ),
                       const Text(
                         "Status da sua plantinha",
